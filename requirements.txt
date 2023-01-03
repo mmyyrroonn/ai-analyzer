@@ -8,7 +8,8 @@ coverage==4.5.4
 Sphinx==1.8.5
 twine==1.14.0
 Flask==2.2.2
-chatgptpy=1.0.2
-
-
-
+chatgptpy==1.0.2
+numpy==1.23.5
+openai==0.25.0
+wordcloud==1.8.2.2
+python-dotenv==0.21.0
