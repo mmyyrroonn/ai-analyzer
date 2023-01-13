@@ -26,9 +26,9 @@ class PostProcesser:
         refined_results = {}
         for key, data in raw_results.items():
             try:
-                striped_data = data.strip().strip('"').strip('!').strip('\\n').lstrip('Keywords:').strip()
+                striped_data = data.strip().strip('"').strip('!').strip('').lstrip('Keywords:').strip()
                 splited_data = striped_data.split(',')
-                refined_data = [ item.strip().strip('\\n').strip() for item in splited_data ]
+                refined_data = [ item.strip() for item in splited_data ]
                 refined_results[key] = refined_data
             except Exception as e:
                 print(e)
