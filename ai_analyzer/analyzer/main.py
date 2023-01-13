@@ -3,7 +3,6 @@ import openai
 import time
 import os
 from dotenv import load_dotenv
-from pathlib import Path
 
 dotenv_path = os.path.abspath(os.path.join(os.path.dirname(__file__),os.path.pardir,os.path.pardir,'.env'))
 load_dotenv(dotenv_path=dotenv_path)
@@ -46,16 +45,14 @@ class AIAnalyzer:
         return refined_splited_keywords
 
     def query_key_words_for_content(self, content):
-        raw_results = {}
         for key, value in content.items():
             print("[OpenAI] Doing query for {}".format(key))
             try:
                 rst = self.query_key_words_for_post(value)
-                raw_results[key] = rst
+                yield key, rst
             except Exception as e:
                 print(e)
             time.sleep(3)
-        return raw_results
 
 class AIAnalyzerException(Exception):
     def __init__(self, message):

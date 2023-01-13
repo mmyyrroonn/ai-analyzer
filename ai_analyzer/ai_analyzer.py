@@ -45,18 +45,13 @@ def analyze_profile():
 
 @app.route('/fetchAllKeywords', methods=['POST'])
 def fetch_all_keywords():
-    # Get the JSON data from the request
-    data = request.get_json()
-    # Extract the 'prompt' field from the JSON data
-    profile_id = data['profileId']
-    keywords = load_keywords(profile_id)
-    filtered_keywords = [ item for item in keywords if (not item.startswith('000')) and len(item)!=0]
-    refined_keywords = [ item.strip().strip('\\n').strip("Keywords:").strip() for item in filtered_keywords]
-    splited_keywords = []
-    for data in refined_keywords:
-        splited_keywords.extend(data.split(','))
-    refined_splited_keywords = [ item.strip().strip('\\n').strip() for item in splited_keywords]
-    ai_tag_generator.generate_word_cloud_pic(' '.join(refined_splited_keywords))
-    return refined_splited_keywords
-    
-
+    pre_processor = PreProcesser()
+    next_profile = api.fetch_next_ai_tag_profile()
+    if next_profile is not None:
+        print("Process next profile {}".format(next_profile['profile']))
+        profile_id = next_profile['profile']
+        ai_result = api.get_all_ai_results(profile_id)
+        print("ai_result: {}".format(ai_result))
+        _, existing = pre_processor.pre_format([], ai_result)
+        ai_tag_generator.generate_word_cloud_pic(existing, profile_id)
+    return "success"
