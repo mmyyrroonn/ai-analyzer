@@ -17,6 +17,7 @@ class AIPicGenerator:
         self.mask_coloring = np.array(Image.open(path.join(d, "alice_color.png")))
         self.image_colors = ImageColorGenerator(self.mask_coloring)
         self.env_path = os.getenv('AI_TAG_PATH')
+        self.tags_count = 10
 
     def generate_word_cloud_pic_with_mask(self, words, profile):        
         wc = WordCloud(background_color="white", max_words=2000, mask=self.mask_coloring, max_font_size=40, random_state=42)
@@ -43,4 +44,5 @@ class AIPicGenerator:
         image_name = str(profile) + "-" + str(nftid) + '-' + str(int(time.time())) + ".png"
         img_path = os.path.abspath(os.path.join(self.env_path, image_name))
         wc.to_file(img_path)
-        return image_name
+        words_tags = [item[0] for item in list(wc.words_.items())[:self.tags_count]]
+        return image_name, words_tags

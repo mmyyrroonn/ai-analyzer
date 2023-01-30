@@ -17,7 +17,7 @@ class AITagFactory:
         self.type = type
         self.pic_server = os.getenv('PIC_SERVER')
 
-    def generate_ai_tag_metadata(self, profile, pic_url):
+    def generate_ai_tag_metadata(self, profile, pic_url, tags = []):
         request_body = {
             "name": self.name,
             "description": self.description,
@@ -26,6 +26,7 @@ class AITagFactory:
             "provider": self.provider,
             "type": self.type,
             "profileId": profile,
+            "tags": tags,
             "pic_url": self.pic_server+pic_url,
         }
         return request_body

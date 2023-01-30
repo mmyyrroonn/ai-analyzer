@@ -61,10 +61,13 @@ class API:
         except:
             return None
 
-    def update_profile_status(self, id):
+    def update_profile_status(self, id, unprocessed):
         api_url = self.endpoint + "/api/v0/ai/updateProfile?id=" + str(id)
+        request_body = {
+            'unprocessed': unprocessed,
+        }
         try:
-            response = requests.post(api_url)
+            response = requests.post(api_url, json=request_body)
             if response.status_code == 200:
                 return response.json()
             else:

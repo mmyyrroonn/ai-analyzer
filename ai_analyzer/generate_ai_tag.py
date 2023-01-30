@@ -21,9 +21,9 @@ def main_logic():
                 continue
             print("ai_result: {}".format(ai_result))
             _, existing = pre_processor.pre_format([], ai_result)
-            img_path = ai_pic_generator.generate_word_cloud_pic(existing, profile_id, ai_tag_factory.nftid)
-            ai_tag = ai_tag_factory.generate_ai_tag_metadata(profile_id, img_path)
+            img_path, tags = ai_pic_generator.generate_word_cloud_pic(existing, profile_id, ai_tag_factory.nftid)
+            ai_tag = ai_tag_factory.generate_ai_tag_metadata(profile_id, img_path, tags)
             api.push_nft(ai_tag)
-        time.sleep(5)
+        time.sleep(1)
 
 main_logic()
