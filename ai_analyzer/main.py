@@ -14,8 +14,8 @@ def main_logic():
     while True:
         next_profile = api.fetch_next_waiting_profile()
         if next_profile is not None:
-            print("Process next profile {}".format(next_profile['profile']))
-            profile_id = next_profile['profile']
+            print("Process next profile {}".format(next_profile['profileId']))
+            profile_id = next_profile['profileId']
             id = next_profile['id']
             content = api.get_all_posts(profile_id)
             print("content: {}".format(content))
@@ -43,12 +43,6 @@ def main_logic():
 
             # mark as finished
             api.update_profile_status(id, 0)
-
-            # quite simple achievement system
-            # valid content larger than 60 will try to generate ai tag
-            # right now, the ai tag won't update and it's only generated once
-            if len(filtered_content) + len(ai_result) >= 10:
-                api.push_ai_tag_generator(profile_id)
         time.sleep(1)
 
 main_logic()

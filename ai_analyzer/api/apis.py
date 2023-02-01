@@ -97,13 +97,13 @@ class API:
         except:
             return None
 
-    def push_ai_tag_generator(self, id):
-        api_url = self.endpoint + "/api/v0/ai/pushAITag?profile=" + str(id)
-        try:
-            response = requests.post(api_url)
-            if response.status_code == 200:
-                return response.json()
-            else:
-                return None
-        except:
-            return None
+    # def push_ai_tag_generator(self, id):
+    #     api_url = self.endpoint + "/api/v0/ai/pushAITag?profile=" + str(id)
+    #     try:
+    #         response = requests.post(api_url)
+    #         if response.status_code == 200:
+    #             return response.json()
+    #         else:
+    #             return None
+    #     except:
+    #         return None
