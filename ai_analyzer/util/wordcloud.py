@@ -33,8 +33,9 @@ class AIPicGenerator:
         wc.to_file(img_path)
         return img_path
 
-    def generate_word_cloud_pic(self, words, profile, nftid=""):        
-        wc = WordCloud(width=1600, height=400, max_words=200, min_font_size=10, max_font_size=150, random_state=42, mode="RGBA", background_color=None, colormap="RdGy_r")
+    def generate_word_cloud_pic(self, words, profile, nftid=""):
+        font_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'wryh.ttf'))
+        wc = WordCloud(width=1600, height=400, max_words=200, min_font_size=10, max_font_size=150, random_state=42, mode="RGBA", background_color=None, colormap="GnBu_r", font_path=font_path)
         # generate word cloud
         keywords = []
         for data in words.values():
