@@ -13,7 +13,7 @@ class AIAnalyzer:
         # self.chat = Chat(email = email, password = password, proxies = proxies)
         openai.api_key = os.getenv('OPENAI_API_KEY')
 
-    def query_key_words_for_post(self, prompt: str):
+    def query_key_words_for_post_with_davinci(self, prompt: str):
         if prompt is None:
             raise AIAnalyzerException("Enter a prompt.")
 
@@ -35,9 +35,34 @@ class AIAnalyzer:
         )
         return completion["choices"][0]["text"]
 
+    def query_key_words_for_post(self, prompt: str):
+        if prompt is None:
+            raise AIAnalyzerException("Enter a prompt.")
+
+        if not isinstance(prompt, str):
+            raise AIAnalyzerException("Prompt must be a string.")
+
+        if len(prompt) == 0:
+            raise AIAnalyzerException("Prompt cannot be empty.")
+
+        question = "Summary three keys words for the paragraph and split it with comma: "
+
+        full_message = [
+            {"role": "system", "content": "You are a helpful assistant that summary the key words from the content"},
+            {"role": "user", "content": question + prompt}
+        ]
+
+        completion = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=full_message,
+            max_tokens=512,
+            temperature=0.2
+        )
+        return completion["choices"][0]["message"]["content"]
+
     def refine_text_and_split(self, text):
         filtered_keywords = [ item for item in text if (not item.startswith('000')) and len(item)!=0]
-        refined_keywords = [ item.strip().strip('\\n').strip("Keywords:").strip() for item in filtered_keywords]
+        refined_keywords = [ item.strip().strip('\\n').strip("Keywords:").strip().rstrip('.') for item in filtered_keywords]
         splited_keywords = []
         for data in refined_keywords:
             splited_keywords.extend(data.split(','))
@@ -52,7 +77,7 @@ class AIAnalyzer:
                 yield key, rst
             except Exception as e:
                 print(e)
-            time.sleep(3)
+            time.sleep(6)
 
 class AIAnalyzerException(Exception):
     def __init__(self, message):
