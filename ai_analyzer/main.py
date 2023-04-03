@@ -2,47 +2,68 @@ from analyzer.main import AIAnalyzer
 from api.apis import API
 from analyzer.processors import PreProcesser, PostProcesser
 import time
+import multiprocessing
 
-def main_logic():
+def processor(thread_num, queue):
+    print("Thread {} started".format(thread_num))
     api = API()
     pre_processor = PreProcesser()
     ai_analyzer = AIAnalyzer()
     post_processor = PostProcesser()
-
     update_step = 3
-
     while True:
-        next_profile = api.fetch_next_waiting_profile()
+        next_profile = queue.get()
         if next_profile is not None:
-            print("Process next profile {}".format(next_profile['profileId']))
             profile_id = next_profile['profileId']
             id = next_profile['id']
+            print("Thread {} processing profile {}".format(thread_num, profile_id))
             content = api.get_all_posts(profile_id)
-            print("content: {}".format(content))
             ai_result = api.get_all_ai_results(profile_id)
-            print("ai_result: {}".format(ai_result))
-
+            print("Thread {} ai_result content: {}".format(thread_num, ai_result))
+            print("Thread {} raw contents: {}".format(thread_num, content))
+    
             filtered_content = pre_processor.filter_contents(content, ai_result)
-            # cutted_filtered_content = dict([(key, filtered_content[key]) for i, key in enumerate(filtered_content) if i < 100])       
-            analyzer_process = ai_analyzer.query_key_words_for_content(filtered_content)
-
+            group_contents = pre_processor.group_contents(filtered_content)
+            print("Thread {} grouped contents: {}".format(thread_num, group_contents))
+            analyzer_process = ai_analyzer.query_key_words_for_content(group_contents)
+    
             unprocessed = len(filtered_content)
             api.update_profile_status(id, unprocessed)
             raw_results = {}
-            for key, rst in analyzer_process:
-                raw_results[key] = rst
+            for index, keys, rst in analyzer_process:
+                raw_results.update({k: v for k, v in zip(keys, rst)})
                 if len(raw_results) >= update_step:
+                    print("Thread {} raw_results contents: {}".format(thread_num, raw_results))
                     refined_results = post_processor.refine_text_and_split(raw_results)
                     api.update_ai_results(profile_id, raw_results, refined_results)
-                    unprocessed -= update_step
+                    unprocessed -= len(raw_results)
                     api.update_profile_status(id, unprocessed)
                     raw_results = {}
-            # update remaining ai results
             refined_results = post_processor.refine_text_and_split(raw_results)
             api.update_ai_results(profile_id, raw_results, refined_results)
-
-            # mark as finished
+    
             api.update_profile_status(id, 0)
-        time.sleep(1)
 
-main_logic()
+def main_logic():
+    api = API()
+    queue = multiprocessing.Queue()
+    processes = []
+    for i in range(10):
+        p = multiprocessing.Process(target=processor, args=(i, queue))
+        p.start()
+        processes.append(p)
+    try:
+        while True:
+            # Retrieve IDs and add them to the queue
+            next_profile = api.fetch_next_waiting_profile()
+            if next_profile is not None:
+                queue.put(next_profile)
+            time.sleep(0.2)
+    except KeyboardInterrupt:
+        for p in processes:
+            p.terminate()
+    for p in processes:
+        p.join()
+
+if __name__ == '__main__':
+    main_logic()

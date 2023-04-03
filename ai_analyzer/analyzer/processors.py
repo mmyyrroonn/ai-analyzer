@@ -1,5 +1,8 @@
+import tiktoken
 class PreProcesser:
     def __init__(self) -> None:
+        self.token_limit = 1024
+        self.content_limit = 10
         pass
 
     def pre_format(self, contents_list, existing_results):
@@ -17,6 +20,32 @@ class PreProcesser:
         existing_keys = existing.keys()
         filtered_contents = dict(filter(lambda item: item[0] not in existing_keys, filtered_contents_with_enough_length.items()))
         return filtered_contents
+
+    def num_tokens_from_string(self, string: str, encoding_name = "cl100k_base") -> int:
+        """Returns the number of tokens in a text string."""
+        encoding = tiktoken.get_encoding(encoding_name)
+        num_tokens = len(encoding.encode(string))
+        return num_tokens
+
+    def group_contents(self, filtered_contents):
+        group_contents = {}
+        ids = []
+        contents = []
+        token_counts = 0
+        index = 0
+        for key, value in list(filtered_contents.items()):
+            token_count = self.num_tokens_from_string(value)
+            if token_counts + token_count > self.token_limit or len(contents) >= self.content_limit:
+                group_contents[index] = {"ids": ids, "contents": contents}
+                index += 1
+                ids = []
+                contents = []
+                token_counts = 0
+            ids.append(key)
+            contents.append(value)
+            token_counts += token_count
+        group_contents[index] = {"ids": ids, "contents": contents}
+        return group_contents
 
 class PostProcesser:
     def __init__(self) -> None:

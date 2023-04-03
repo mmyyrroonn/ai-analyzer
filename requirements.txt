@@ -13,3 +13,4 @@ numpy==1.23.5
 openai==0.27.0
 wordcloud==1.8.2.2
 python-dotenv==0.21.0
+tenacity==8.2.2
