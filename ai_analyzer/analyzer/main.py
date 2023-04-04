@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import json
 import ast
 from tenacity import retry, stop_after_attempt, wait_random_exponential, RetryError
+import random
 
 dotenv_path = os.path.abspath(os.path.join(os.path.dirname(__file__),os.path.pardir,os.path.pardir,'.env'))
 load_dotenv(dotenv_path=dotenv_path)
@@ -14,7 +15,7 @@ class AIAnalyzer:
     def __init__(self, email = None, password = None, proxies: str or dict = None):
         # Initializing the chat class will automatically log you in, check access_tokens
         # self.chat = Chat(email = email, password = password, proxies = proxies)
-        openai.api_key = os.getenv('OPENAI_API_KEY')
+        self.api_keys = os.getenv('OPENAI_API_KEY').split(',')
 
     def query_key_words_for_post_with_davinci(self, prompt: str):
         if prompt is None:
@@ -30,6 +31,7 @@ class AIAnalyzer:
 
         full_prompt = question + prompt
 
+        openai.api_key = random.choice(self.api_keys)
         completion = openai.Completion.create(
             model="text-davinci-003",
             prompt=full_prompt,
@@ -54,7 +56,7 @@ class AIAnalyzer:
             {"role": "system", "content": "You are a helpful assistant that summary the key words from the content"},
             {"role": "user", "content": question + prompt}
         ]
-
+        openai.api_key = random.choice(self.api_keys)
         completion = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=full_message,
@@ -84,7 +86,7 @@ class AIAnalyzer:
             {"role": "system", "content": system_role},
             {"role": "user", "content": prompt}
         ]
-
+        openai.api_key = random.choice(self.api_keys)
         completion = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=full_message,
@@ -124,7 +126,7 @@ class AIAnalyzer:
                 print(e)
             except Exception as e:
                 print(e)
-            time.sleep(6)
+            time.sleep(3)
 
 class AIAnalyzerException(Exception):
     def __init__(self, message):
