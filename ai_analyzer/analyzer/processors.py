@@ -1,4 +1,6 @@
 import tiktoken
+import logging
+
 class PreProcesser:
     def __init__(self) -> None:
         self.token_limit = 1024
@@ -49,6 +51,7 @@ class PreProcesser:
 
 class PostProcesser:
     def __init__(self) -> None:
+        self.logger = logging.getLogger("post-processor")
         pass
 
     def refine_text_and_split(self, raw_results):
@@ -60,6 +63,6 @@ class PostProcesser:
                 refined_data = [ item.strip() for item in splited_data ]
                 refined_results[key] = refined_data
             except Exception as e:
-                print(e)
+                self.logger.error(e)
         return refined_results
         

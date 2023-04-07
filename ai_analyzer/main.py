@@ -1,69 +1,21 @@
-from analyzer.main import AIAnalyzer
-from api.apis import API
-from analyzer.processors import PreProcesser, PostProcesser
-import time
-import multiprocessing
+import argparse
+import yaml
 
-def processor(thread_num, queue):
-    print("Thread {} started".format(thread_num))
-    api = API()
-    pre_processor = PreProcesser()
-    ai_analyzer = AIAnalyzer()
-    post_processor = PostProcesser()
-    update_step = 3
-    while True:
-        next_profile = queue.get()
-        if next_profile is not None:
-            profile_id = next_profile['profileId']
-            id = next_profile['id']
-            print("Thread {} processing profile {}".format(thread_num, profile_id))
-            content = api.get_all_posts(profile_id)
-            ai_result = api.get_all_ai_results(profile_id)
-            print("Thread {} ai_result content: {}".format(thread_num, ai_result))
-            print("Thread {} raw contents: {}".format(thread_num, content))
-    
-            filtered_content = pre_processor.filter_contents(content, ai_result)
-            group_contents = pre_processor.group_contents(filtered_content)
-            print("Thread {} grouped contents: {}".format(thread_num, group_contents))
-            analyzer_process = ai_analyzer.query_key_words_for_content(group_contents)
-    
-            unprocessed = len(filtered_content)
-            api.update_profile_status(id, unprocessed)
-            raw_results = {}
-            for index, keys, rst in analyzer_process:
-                raw_results.update({k: v for k, v in zip(keys, rst)})
-                if len(raw_results) >= update_step:
-                    print("Thread {} raw_results contents: {}".format(thread_num, raw_results))
-                    refined_results = post_processor.refine_text_and_split(raw_results)
-                    api.update_ai_results(profile_id, raw_results, refined_results)
-                    unprocessed -= len(raw_results)
-                    api.update_profile_status(id, unprocessed)
-                    raw_results = {}
-            refined_results = post_processor.refine_text_and_split(raw_results)
-            api.update_ai_results(profile_id, raw_results, refined_results)
-    
-            api.update_profile_status(id, 0)
+parser = argparse.ArgumentParser(description='Choose which Python service to start')
+parser.add_argument('--config', type=str, required=True, help='Path to the configuration file')
+args = parser.parse_args()
 
-def main_logic():
-    api = API()
-    queue = multiprocessing.Queue()
-    processes = []
-    for i in range(10):
-        p = multiprocessing.Process(target=processor, args=(i, queue))
-        p.start()
-        processes.append(p)
-    try:
-        while True:
-            # Retrieve IDs and add them to the queue
-            next_profile = api.fetch_next_waiting_profile()
-            if next_profile is not None:
-                queue.put(next_profile)
-            time.sleep(0.2)
-    except KeyboardInterrupt:
-        for p in processes:
-            p.terminate()
-    for p in processes:
-        p.join()
+with open(args.config, 'r') as f:
+    # 从配置文件中读取service_name参数
+    config = yaml.safe_load(f)
+    service_name = config.get('service_name', 'ai_analyzer')
 
-if __name__ == '__main__':
+# 根据配置文件中的参数启动不同的Python服务
+if service_name == 'ai_analyzer':
+    from ai_analyzer import main_logic
     main_logic()
+elif service_name == 'tag_generator':
+    from generate_ai_tag import main_logic
+    main_logic()
+else:
+    print(f"Unknown service: {service_name}")

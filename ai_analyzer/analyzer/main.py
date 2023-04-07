@@ -7,6 +7,7 @@ import json
 import ast
 from tenacity import retry, stop_after_attempt, wait_random_exponential, RetryError
 import random
+import logging
 
 dotenv_path = os.path.abspath(os.path.join(os.path.dirname(__file__),os.path.pardir,os.path.pardir,'.env'))
 load_dotenv(dotenv_path=dotenv_path)
@@ -16,6 +17,7 @@ class AIAnalyzer:
         # Initializing the chat class will automatically log you in, check access_tokens
         # self.chat = Chat(email = email, password = password, proxies = proxies)
         self.api_keys = os.getenv('OPENAI_API_KEY').split(',')
+        self.logger = logging.getLogger("ai-analyzer")
 
     def query_key_words_for_post_with_davinci(self, prompt: str):
         if prompt is None:
@@ -116,16 +118,16 @@ class AIAnalyzer:
 
     def query_key_words_for_content(self, content):
         for index, value in content.items():
-            print("[OpenAI] Doing query for {}".format(value["ids"]))
+            self.logger.info("[OpenAI] Doing query for {}".format(value["ids"]))
             try:
                 rst = self.query_key_words_for_multi_post(json.dumps({i: val for i, val in enumerate(value["contents"])}))
                 yield index, value["ids"], ast.literal_eval(rst)
             except RetryError as e:
-                print("Execution failed after multiple retries")
+                self.logger.error("Execution failed after multiple retries")
             except openai.error.InvalidRequestError as e:
-                print(e)
+                self.logger.error(e)
             except Exception as e:
-                print(e)
+                self.logger.error(e)
             time.sleep(3)
 
 class AIAnalyzerException(Exception):

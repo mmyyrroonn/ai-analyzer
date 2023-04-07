@@ -2,6 +2,7 @@ import requests
 import os
 from os import path
 from dotenv import load_dotenv
+import logging
 
 d = path.dirname(__file__) if "__file__" in locals() else os.getcwd()
 dotenv_path = os.path.abspath(os.path.join(os.path.dirname(__file__),os.path.pardir,os.path.pardir,'.env'))
@@ -10,6 +11,8 @@ load_dotenv(dotenv_path=dotenv_path)
 class API:
     def __init__(self):
         self.endpoint = os.getenv('API_ENDPOINT')
+        self.logger = logging.getLogger("api")
+
     def get_all_posts(self, profile_id):
         api_url = self.endpoint + "/api/v0/publication/post?profile=" + str(profile_id)
         try:
@@ -40,7 +43,7 @@ class API:
             'raw': raw_results,
             'refined': refined_results
         }
-        print("AI results are {}".format(request_body))
+        self.logger.info("AI results are {}".format(request_body))
         try:
             response = requests.post(api_url, json=request_body)
             if response.status_code == 200:

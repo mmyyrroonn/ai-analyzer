@@ -1,0 +1,26 @@
+version: '3'
+services:
+  ai_analyzer:
+    # 使用刚才构建的镜像
+    restart: always
+    image: magnet-ai-engine
+
+    # 挂载本地配置文件到容器中
+    volumes:
+      - ./ai_analyzer_config.yml:/magnet/config.yaml
+
+    env_file:
+      - .env
+  
+  tag_generator:
+    # 使用刚才构建的镜像
+    restart: always
+    image: magnet-ai-engine
+
+    # 挂载本地配置文件到容器中 
+    volumes:
+      - ./tag_generator_config.yml:/magnet/config.yaml
+      - /home/ubuntu/nosocial-data/ai-tags:/home/ubuntu/nosocial-data/ai-tags
+
+    env_file:
+      - .env
